@@ -1,0 +1,1 @@
+"./main.obj" "./drivers/ec_MAX1231.obj" "./drivers/echal_circFIFO64_k.obj" "./drivers/echal_gpio.obj" "./drivers/echal_usart.obj" "../lnk_msp430fr6989.cmd" -llibmath.a -llibc.a 
