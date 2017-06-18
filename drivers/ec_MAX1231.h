@@ -1,4 +1,8 @@
-#include "echal_spi.h"
+//#include "echal_spi.h"
+#include <MSP430.h>
+#include <stdint.h>
+
+#define REG_OFFSET(x) (*(uint32_t *)((uint32_t)x))
 
 /*typedef enum {
     CLK_MODE00,
@@ -14,7 +18,7 @@ typedef enum {
 } ADC_index;
 
 typedef struct {
-    echal_spi_cfg_t spi_conf*; ///< SPI conf
+    //hal_spi_cfg_t spi_conf*; ///< SPI conf
 
     // Need GPIO.c first for proper pin configuration
     /*IO_t nCNVST_pin; ///< data is requested if nCNVST is pulled low
@@ -25,6 +29,39 @@ typedef struct {
     ADC_index index;
     uint8_t N_channels; ///< number of channels to be read
 } ec_MAX1231_cfg_t;
+
+uint16_t MAX1231_0_result[12+1] = {0};
+ec_MAX1231_cfg_t MAX1231_0 =
+{
+    /*.spi_conf = (echal_spi_cfg_t)
+        {
+        },*/
+    .data = MAX1231_0_result,
+    .index = ADC0,
+    .N_channels = 12+1  ///< +1 temperature
+};
+
+uint16_t MAX1231_1_result[12+1] = {0};
+ec_MAX1231_cfg_t MAX1231_1 =
+{
+    /*.spi_conf = (echal_spi_cfg_t)
+        {
+        },*/
+    .data = MAX1231_1_result,
+    .index = ADC1,
+    .N_channels = 12+1  ///< +1 temperature
+};
+
+uint16_t MAX1231_2_result[12+1] = {0};
+ec_MAX1231_cfg_t MAX1231_2 =
+{
+    /*.spi_conf = (echal_spi_cfg_t)
+        {
+        },*/
+    .data = MAX1231_2_result,
+    .index = ADC2,
+    .N_channels = 12+1 ///< +1 temperature
+};
 
 void ec_MAX1231_init(
         ec_MAX1231_cfg_t *cfg_table
