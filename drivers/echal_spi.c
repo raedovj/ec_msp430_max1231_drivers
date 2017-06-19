@@ -158,8 +158,8 @@ hal_spi_errors_t hal_spi_init(hal_spi_channel_cfg_t *table)
     }
     else
     {
-        *(table->base_address) &= UCMODE_1;
-        *(table->base_address) &= UCMODE_2;
+        *(table->base_address) &= ~UCMODE_1;
+        *(table->base_address) &= ~UCMODE_2;
     }
 
     if(table->synchronus_mode == HAL_SPI_SYNCRONUS_MODE_ENBLED)
@@ -191,35 +191,22 @@ hal_spi_errors_t hal_spi_init(hal_spi_channel_cfg_t *table)
 
 hal_spi_errors_t hal_spi_write(hal_spi_channel_cfg_t *table, char c)
 {
-    volatile unsigned int * base_address;
-    uint8_t TX_offset;
+    //volatile unsigned int * base_address = table->base_address;
+    uint16_t IFG_offset;
 
-    if(table->port == HAL_SPI_A0)
+    if(table->port == HAL_SPI_A0 || table->port == HAL_SPI_A1)
     {
-        base_address = &UCA0IFG;
-        TX_offset = 0x7;
+        IFG_offset = 0xE;
     }
-    else if(table->port == HAL_SPI_A1)
+    else if(table->port == HAL_SPI_B0 || table->port == HAL_SPI_B1)
     {
-        base_address = &UCA1IFG;
-        TX_offset = 0x7;
-     }
-    else if(table->port == HAL_SPI_B0)
-    {
-        base_address = &UCB0IFG;
-        TX_offset = 0xF;
-    }
-    else if(table->port == HAL_SPI_B1)
-    {
-        base_address = &UCB1IFG;
-        TX_offset = 0xF;
+        IFG_offset = 0x16;
     }
     else
         return HAL_SPI_PORT_INVALID;
 
-    while(!(*base_address && UCTXIFG));
-    base_address -= TX_offset;
-    *base_address = c;
+    while(!(*(table->base_address + IFG_offset) & UCTXIFG));
+    *(table->base_address + 0x7) = c;
 
     return HAL_SPI_OK;
 }
