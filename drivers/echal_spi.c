@@ -206,6 +206,8 @@ hal_spi_errors_t hal_spi_write(hal_spi_channel_cfg_t *table, char c)
         return HAL_SPI_PORT_INVALID;
 
     while(!(*(table->base_address + IFG_offset) & UCTXIFG));
+
+    *(table->base_address + IFG_offset) &= ~UCTXIFG;
     *(table->base_address + 0x7) = c;
 
     return HAL_SPI_OK;
