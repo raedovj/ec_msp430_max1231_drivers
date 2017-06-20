@@ -1,6 +1,13 @@
-//#include "echal_spi.h"
+#ifndef _EC_MAX1231_H
+#define _EC_MAX1231_H
+
+#include "echal_spi.h"
 #include <MSP430.h>
 #include <stdint.h>
+
+#define ADC0_N_channels 13
+#define ADC1_N_channels 13
+#define ADC2_N_channels 13
 
 #define REG_OFFSET(x) (*(uint32_t *)((uint32_t)x))
 
@@ -17,8 +24,13 @@ typedef enum {
     ADC2
 } ADC_index;
 
+typedef enum {
+    ADC_not_ready,
+    ADC_ready
+} ADC_data_ready;
+
 typedef struct {
-    //hal_spi_cfg_t spi_conf*; ///< SPI conf
+    hal_spi_channel_cfg_t *spi_conf; ///< SPI conf
 
     // Need GPIO.c first for proper pin configuration
     /*IO_t nCNVST_pin; ///< data is requested if nCNVST is pulled low
@@ -28,44 +40,24 @@ typedef struct {
     uint16_t *data; ///< buffer where MAX1231 writes data. ## max size 16 ##
     ADC_index index;
     uint8_t N_channels; ///< number of channels to be read
+    ADC_data_ready ready;
 } ec_MAX1231_cfg_t;
 
-uint16_t MAX1231_0_result[12+1] = {0};
-ec_MAX1231_cfg_t MAX1231_0 =
-{
-    /*.spi_conf = (echal_spi_cfg_t)
-        {
-        },*/
-    .data = MAX1231_0_result,
-    .index = ADC0,
-    .N_channels = 12+1  ///< +1 temperature
-};
+extern uint16_t all_ADC_readings[];
 
-uint16_t MAX1231_1_result[12+1] = {0};
-ec_MAX1231_cfg_t MAX1231_1 =
-{
-    /*.spi_conf = (echal_spi_cfg_t)
-        {
-        },*/
-    .data = MAX1231_1_result,
-    .index = ADC1,
-    .N_channels = 12+1  ///< +1 temperature
-};
+extern ec_MAX1231_cfg_t MAX1231_0, MAX1231_1, MAX1231_2;
 
-uint16_t MAX1231_2_result[12+1] = {0};
-ec_MAX1231_cfg_t MAX1231_2 =
-{
-    /*.spi_conf = (echal_spi_cfg_t)
-        {
-        },*/
-    .data = MAX1231_2_result,
-    .index = ADC2,
-    .N_channels = 12+1 ///< +1 temperature
-};
+void ec_MAX1231_GPIO_init();
 
+//init GPIO before
 void ec_MAX1231_init(
         ec_MAX1231_cfg_t *cfg_table
 );
+
+// init all ADCs before use
+void ec_MAX1231_start_all_ADC_conversions();
+
+ADC_data_ready ec_MAX1231_check_results_available();
 
 void ec_MAX1231_reset(
         ec_MAX1231_cfg_t *cfg_table
@@ -79,3 +71,5 @@ void ec_MAX1231_read_results(
         ec_MAX1231_cfg_t *cfg_table, ///< [in] to indicate which ADC to read
         uint16_t *result ///< [out] ADC result(s)
 );
+
+#endif
