@@ -86,6 +86,7 @@ typedef enum {
  */
 typedef enum {
     HAL_USART_ENABLED=64, ///< Requested task impossible while peripheral in question is enabled
+    HAL_USART_OK, ///< All function calls must check if this code is set
     HAL_USART_DISABLED, ///< Requested task impossible while peripheral in question is disabled
     HAL_USART_GPIO_ERROR, ///< GPIO tied with USART peripheral returned error state
     HAL_USART_BUFFER_DEPLETED, ///< Not enough data to be read
