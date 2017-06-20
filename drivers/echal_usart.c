@@ -1,4 +1,4 @@
-#include <drivers/echal_usart.h>
+#include "drivers/echal_usart.h"
 #include <msp430.h>
 #include <math.h>
 
@@ -32,13 +32,13 @@ hal_usart_errors_t hal_usart_init(uint8_t peripheral_index,
     }
     else if (cfg_table->RXpin.portNo == 4 && cfg_table->RXpin.pinNo == 3)
     {
-        P4SEL1 |= BIT3;
-        P4SEL0 &= ~BIT3;
+        P4SEL0 |= BIT3;
+        P4SEL1 &= ~BIT3;
     }
     else if (cfg_table->RXpin.portNo == 5 && cfg_table->RXpin.pinNo == 5)
     {
-        P5SEL1 |= BIT5;
-        P5SEL0 &= ~BIT5;
+        P5SEL0 |= BIT5;
+        P5SEL1 &= ~BIT5;
     }
     else if (cfg_table->RXpin.portNo == 3 && cfg_table->RXpin.pinNo == 5)
     {
@@ -60,8 +60,8 @@ hal_usart_errors_t hal_usart_init(uint8_t peripheral_index,
     }
     else if (cfg_table->TXpin.portNo == 5 && cfg_table->TXpin.pinNo == 4)
     {
-        P5SEL1 |= BIT4;
-        P5SEL0 &= ~BIT4;
+        P5SEL0 |= BIT4;
+        P5SEL1 &= ~BIT4;
     }
     else if (cfg_table->TXpin.portNo == 3 && cfg_table->TXpin.pinNo == 4)
     {
@@ -174,7 +174,7 @@ hal_usart_errors_t hal_usart_init(uint8_t peripheral_index,
     REG_OFFSET(base_addr + UCAxCTLW0_offset) &= ~UCSWRST;   // Initialize eUSCI
     REG_OFFSET(base_addr + UCAxIE_offset) = UCRXIE; // Enable USCI_Ax RX interrupt
     REG_OFFSET(base_addr + UCAxIFG_offset) |= UCTXIFG; // Indicate TX buffer to be empty so interrupts can happen
-    return HAL_OK;
+    return HAL_USART_OK;
 }
 
 hal_usart_errors_t hal_usart_reset(uint8_t peripheral_index)
@@ -251,7 +251,7 @@ hal_usart_errors_t hal_usart_reset(uint8_t peripheral_index)
     REG_OFFSET(base_addr + UCAxIFG_offset ) = (uint16_t) 0x02;
     REG_OFFSET(base_addr + UCAxIV_offset ) = (uint16_t) 0x00;
 
-    return HAL_OK;
+    return HAL_USART_OK;
 }
 
 hal_usart_errors_t hal_usart_write(uint8_t peripheral_index,
@@ -274,7 +274,7 @@ hal_usart_errors_t hal_usart_write(uint8_t peripheral_index,
     {
         circFIFO_push(TX_fifo_buffer, data, word_count);
         REG_OFFSET(base_addr + UCAxIE_offset ) |= UCTXIE; // Enable transmit interrupt
-        return HAL_OK;
+        return HAL_USART_OK;
     }
     REG_OFFSET(base_addr + UCAxIE_offset ) |= UCTXIE; // Enable transmit interrupt
     return HAL_USART_BUFFER_FULL;
@@ -293,37 +293,24 @@ hal_usart_errors_t hal_usart_read(uint8_t peripheral_index, uint16_t word_count,
     *output_len = circFIFO_pop(RX_fifo_buffer, data, word_count);
 
     if (word_count <= circFIFO_size_used(RX_fifo_buffer))
-        return HAL_OK;
+        return HAL_USART_OK;
     else
         return HAL_USART_BUFFER_DEPLETED;
 }
 
-void uartAx_interrupt_function(uint32_t UCAxIV)
+#pragma vector=USCI_A0_VECTOR
+__interrupt void USCI_A0_ISR(void)
 {
-    circFIFO64k_t *RX_FIFO;
-    circFIFO64k_t *TX_FIFO;
-    uint32_t *base_addr;
-    if (UCAxIV == UCA0IV)
-    {
-        RX_FIFO = uartA0_cfg->RX_FIFO;
-        TX_FIFO = uartA0_cfg->TX_FIFO;
-        base_addr = (uint32_t *) &UCA0CTLW0;
-    }
-    else
-    {
-        RX_FIFO = uartA1_cfg->RX_FIFO;
-        TX_FIFO = uartA1_cfg->TX_FIFO;
-        base_addr = (uint32_t *) &UCA1CTLW0;
-    }
-    switch (__even_in_range(UCAxIV, UCTXCPTIFG))
+    circFIFO64k_t *RX_FIFO = uartA0_cfg->RX_FIFO;
+    circFIFO64k_t *TX_FIFO = uartA0_cfg->TX_FIFO;
+    switch (__even_in_range(UCA0IV, UCTXCPTIFG))
     {
     case USCI_NONE:
         break;
     case USCI_UART_UCRXIFG:
         if (RX_FIFO->free > 0)
         {
-            RX_FIFO->data[RX_FIFO->head++] = REG_OFFSET(
-                    base_addr + UCAxRXBUF_offset);
+            RX_FIFO->data[RX_FIFO->head++] = UCA0RXBUF;
             RX_FIFO->free--;
             if (RX_FIFO->head >= RX_FIFO->size)
                 RX_FIFO->head = 0;
@@ -332,8 +319,7 @@ void uartAx_interrupt_function(uint32_t UCAxIV)
     case USCI_UART_UCTXIFG:
         if (TX_FIFO->free < TX_FIFO->size)
         {
-            REG_OFFSET(base_addr + UCAxTXBUF_offset) =
-                    TX_FIFO->data[TX_FIFO->tail++];
+            UCA0TXBUF = TX_FIFO->data[TX_FIFO->tail++];
             TX_FIFO->free++;
             if (TX_FIFO->tail >= TX_FIFO->size)
                 TX_FIFO->tail = 0;
@@ -341,8 +327,8 @@ void uartAx_interrupt_function(uint32_t UCAxIV)
         else
         {
             // nothing to send
-            REG_OFFSET(base_addr + UCAxIE_offset) = UCRXIE; //enable only RX interrupt
-            REG_OFFSET(base_addr + UCAxIFG_offset) |= UCTXIFG; // set interrupt flag 1, so interrupt can happen again if enabled
+            UCA0IE = UCRXIE; //enable only RX interrupt
+            UCA0IFG |= UCTXIFG; // set interrupt flag 1, so interrupt can happen again if enabled
         }
         break;
     case USCI_UART_UCSTTIFG:
@@ -351,14 +337,43 @@ void uartAx_interrupt_function(uint32_t UCAxIV)
         break;
     }
 }
-#pragma vector=USCI_A0_VECTOR
-__interrupt void USCI_A0_ISR(void)
-{
-    uartAx_interrupt_function(UCA0IV);
-}
 
 #pragma vector=USCI_A1_VECTOR
 __interrupt void USCI_A1_ISR(void)
 {
-    uartAx_interrupt_function(UCA1IV);
+    circFIFO64k_t *RX_FIFO = uartA1_cfg->RX_FIFO;
+    circFIFO64k_t *TX_FIFO = uartA1_cfg->TX_FIFO;
+    switch (__even_in_range(UCA1IV, UCTXCPTIFG))
+    {
+    case USCI_NONE:
+        break;
+    case USCI_UART_UCRXIFG:
+        if (RX_FIFO->free > 0)
+        {
+            RX_FIFO->data[RX_FIFO->head++] = UCA1RXBUF;
+            RX_FIFO->free--;
+            if (RX_FIFO->head >= RX_FIFO->size)
+                RX_FIFO->head = 0;
+        }
+        break;
+    case USCI_UART_UCTXIFG:
+        if (TX_FIFO->free < TX_FIFO->size)
+        {
+            UCA1TXBUF = TX_FIFO->data[TX_FIFO->tail++];
+            TX_FIFO->free++;
+            if (TX_FIFO->tail >= TX_FIFO->size)
+                TX_FIFO->tail = 0;
+        }
+        else
+        {
+            // nothing to send
+            UCA1IE = UCRXIE; //enable only RX interrupt
+            UCA1IFG |= UCTXIFG; // set interrupt flag 1, so interrupt can happen again if enabled
+        }
+        break;
+    case USCI_UART_UCSTTIFG:
+        break;
+    case USCI_UART_UCTXCPTIFG:
+        break;
+    }
 }
