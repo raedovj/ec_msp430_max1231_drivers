@@ -8,16 +8,16 @@ hal_spi_errors_t hal_spi_init(hal_spi_channel_cfg_t *table)
 {
     table->extra_offset = 0;
 
-    if(table->port == HAL_SPI_A0)
+    if(table->channel == HAL_SPI_A0)
     {
         table->base_address = &UCA0CTLW0;
 
-        if(table->io_port == HAL_SPI_A0_P2)
+        if(table->port == HAL_SPI_A0_P2)
         {
             P2SEL1 &= ~(BIT0 | BIT1 | BIT2 | BIT3);
             P2SEL0 |= (BIT0 | BIT1 | BIT2 | BIT3);
         }
-        else if(table->io_port == HAL_SPI_A0_P4)
+        else if(table->port == HAL_SPI_A0_P4)
         {
             P4SEL1 &= ~(BIT2 | BIT3);
             P4SEL0 |= (BIT2 | BIT3);
@@ -27,49 +27,49 @@ hal_spi_errors_t hal_spi_init(hal_spi_channel_cfg_t *table)
         }
         else
         {
-            return HAL_SPI_IO_PORT_INCOMPATIBLE;
+            return HAL_SPI_PORT_INCOMPATIBLE;
         }
     }
-    else if(table->port == HAL_SPI_A1)
+    else if(table->channel == HAL_SPI_A1)
     {
         table->base_address = &UCA1CTLW0;
 
-        if(table->io_port == HAL_SPI_A1_P3)
+        if(table->port == HAL_SPI_A1_P3)
         {
             P3SEL1 &= ~(BIT4 | BIT5 | BIT6 | BIT7);
             P3SEL0 |= (BIT4 | BIT5 | BIT6 | BIT7);
         }
-        else if(table->io_port == HAL_SPI_A1_P5)
+        else if(table->port == HAL_SPI_A1_P5)
         {
             P5SEL1 &= ~(BIT4 | BIT5 | BIT6 | BIT7);
             P5SEL0 |= (BIT4 | BIT5 | BIT6 | BIT7);
         }
         else
         {
-            return HAL_SPI_IO_PORT_INCOMPATIBLE;
+            return HAL_SPI_PORT_INCOMPATIBLE;
         }
     }
-    else if(table->port == HAL_SPI_B0)
+    else if(table->channel == HAL_SPI_B0)
     {
         table->base_address = &UCB0CTLW0;
         table->extra_offset = 0x10;
 
-        if(table->io_port == HAL_SPI_B0_P1)
+        if(table->port == HAL_SPI_B0_P1)
         {
-            P1SEL1 &= ~(BIT4/* | BIT5 */| BIT6 | BIT7);
-            P1SEL0 |= (BIT4/* | BIT5 */| BIT6 | BIT7);
+            P1SEL1 &= ~(BIT4 | BIT5 | BIT6 | BIT7);
+            P1SEL0 |= (BIT4 | BIT5 | BIT6 | BIT7);
         }
         else
         {
-            return HAL_SPI_IO_PORT_INCOMPATIBLE;
+            return HAL_SPI_PORT_INCOMPATIBLE;
         }
     }
-    else if(table->port == HAL_SPI_B1)
+    else if(table->channel == HAL_SPI_B1)
     {
         table->base_address = &UCB1CTLW0;
         table->extra_offset = 0x10;
 
-        if(table->io_port == HAL_SPI_B1_P3)
+        if(table->port == HAL_SPI_B1_P3)
         {
             P3SEL1 &= ~(BIT0 | BIT1 | BIT2);
             P3SEL0 |= (BIT0 | BIT1 | BIT2);
@@ -77,20 +77,20 @@ hal_spi_errors_t hal_spi_init(hal_spi_channel_cfg_t *table)
             P5SEL0 &= ~(BIT3);
             P5SEL1 |= (BIT3);
         }
-        else if(table->io_port == HAL_SPI_B1_P4)
+        else if(table->port == HAL_SPI_B1_P4)
         {
             P4SEL0 &= ~(BIT0 | BIT1 | BIT6 | BIT7);
             P4SEL1 |= (BIT0 | BIT1 | BIT6 | BIT7);
         }
         else
         {
-            return HAL_SPI_IO_PORT_INCOMPATIBLE;
+            return HAL_SPI_PORT_INCOMPATIBLE;
         }
     }
 
     volatile unsigned int * current_address = table->base_address;
 
-    *(table->base_address) |= UCSWRST;
+    *(table->base_address) = UCSWRST;
 
 
     if(table->phase == HAL_SPI_PHASE_SECOND_TRANSITION)
@@ -194,16 +194,16 @@ hal_spi_errors_t hal_spi_write(hal_spi_channel_cfg_t *table, char c, char *recei
     //volatile unsigned int * base_address = table->base_address;
     uint16_t IFG_offset;
 
-    if(table->port == HAL_SPI_A0 || table->port == HAL_SPI_A1)
+    if(table->channel == HAL_SPI_A0 || table->channel == HAL_SPI_A1)
     {
         IFG_offset = 0xE;
     }
-    else if(table->port == HAL_SPI_B0 || table->port == HAL_SPI_B1)
+    else if(table->channel == HAL_SPI_B0 || table->channel == HAL_SPI_B1)
     {
         IFG_offset = 0x16;
     }
     else
-        return HAL_SPI_PORT_INVALID;
+        return HAL_SPI_CHANNEL_INVALID;
 
     /*while(!(*(table->base_address + IFG_offset) & UCTXIFG));
     *(table->base_address + 0x7) = c;

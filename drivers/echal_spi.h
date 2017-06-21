@@ -2,8 +2,14 @@
 #ifndef _ECHAL_SPI_H
 #define _ECHAL_SPI_H
 
+#define SPI_CHANNEL_B0
+//#define SPI_CHANNEL_B1
+//#define SPI_CHANNEL_A0
+//#define SPI_CHANNEL_A1
+
 #include <stdint.h>
 #include "echal_common.h"
+
 
 /**
  * Error codes that can be returned by SPI module functions
@@ -15,13 +21,13 @@ typedef enum {
     HAL_SPI_ENABLED, ///< Requested task impossible while peripheral in question is enabled
     HAL_SPI_DISABLED, ///< Requested task impossible while peripheral in question is disabled
     HAL_SPI_GPIO_ERROR, ///< GPIO tied with SPI peripheral returned error state
-    HAL_SPI_IO_PORT_INCOMPATIBLE, ///< Chosen IO port for SOMI/SIMO is not compatible with current SPI port
-    HAL_SPI_PORT_INVALID
+    HAL_SPI_PORT_INCOMPATIBLE, ///< Chosen IO port for SOMI/SIMO is not compatible with current SPI port
+    HAL_SPI_CHANNEL_INVALID  ///< Chosen channel is invalid
 } hal_spi_errors_t;
 
 
 /**
- * Possible SPI ports
+ * Possible SPI channels
  */
 typedef enum
 {
@@ -29,7 +35,7 @@ typedef enum
     HAL_SPI_A1, ///< SPI port A1
     HAL_SPI_B0, ///< SPI port B0
     HAL_SPI_B1  ///< SPI port B1
-} hal_spi_port_t;
+} hal_spi_channel_t;
 
 /**
  * Possible SPI IO ports
@@ -43,7 +49,7 @@ typedef enum
     HAL_SPI_B0_P1, ///< SPI B0 SOMI/SIMO in port 1
     HAL_SPI_B1_P3, ///< SPI B1 SOMI/SIMO in port 3
     HAL_SPI_B1_P4  ///< SPI B1 SOMI/SIMO in port 4
-} hal_spi_io_port_t;
+} hal_spi_port_t;
 
 /**
  * Clock polarity
@@ -90,17 +96,17 @@ typedef enum {
  * Possible communication modes
  */
 typedef enum {
-        HAL_SPI_MODE_3_WIRE, ///<
-        HAL_SPI_MODE_4_WIRE_SLAVE_ACTIVE_1, ///<
-        HAL_SPI_MODE_4_WIRE_SLAVE_ACTIVE_0
+    HAL_SPI_MODE_3_WIRE, ///< 3-Wire SPI mode
+    HAL_SPI_MODE_4_WIRE_SLAVE_ACTIVE_1, ///< 4-Wire mode with slave setup
+    HAL_SPI_MODE_4_WIRE_SLAVE_ACTIVE_0 ///< 4-Wire mode with master setup
 } hal_spi_communication_mode_t;
 
 /**
  * Software slave management
  */
 typedef enum {
-        HAL_SPI_SOFTWARE_SLAVE_MANAGEMENT_DISABLED, ///< Software slave managent disable
-        HAL_SPI_SOFTWARE_SLAVE_MANAGEMENT_ENABLED ///< Software slave managent enable
+    HAL_SPI_SOFTWARE_SLAVE_MANAGEMENT_DISABLED, ///< Software slave managent disable
+    HAL_SPI_SOFTWARE_SLAVE_MANAGEMENT_ENABLED ///< Software slave managent enable
 } hal_spi_software_slave_management_t;
 
 /**
@@ -120,25 +126,6 @@ typedef enum {
 } hal_spi_master_select_t;
 
 /**
- * Possible data sizes
- */
-typedef enum {
-  HAL_SPI_DATA_SIZE_4, ///< Data size 4
-  HAL_SPI_DATA_SIZE_5, ///< Data size 5
-  HAL_SPI_DATA_SIZE_6, ///< Data size 6
-  HAL_SPI_DATA_SIZE_7, ///< Data size 7
-  HAL_SPI_DATA_SIZE_8, ///< Data size 8
-  HAL_SPI_DATA_SIZE_9, ///< Data size 9
-  HAL_SPI_DATA_SIZE_10, ///< Data size 10
-  HAL_SPI_DATA_SIZE_11, ///< Data size 11
-  HAL_SPI_DATA_SIZE_12, ///< Data size 12
-  HAL_SPI_DATA_SIZE_13, ///< Data size 13
-  HAL_SPI_DATA_SIZE_14, ///< Data size 14
-  HAL_SPI_DATA_SIZE_15, ///< Data size 15
-  HAL_SPI_DATA_SIZE_16 ///< Data size 16
-} hal_spi_data_size_t;
-
-/**
  * Select character length
  */
 typedef enum {
@@ -154,19 +141,21 @@ typedef enum {
     HAL_SPI_SS_OUTPUT_ENABLED ///< Slave output enable
 } hal_spi_ss_output_t;
 
-
+/**
+ * Select synchronus or asynchronus mode
+ */
 typedef enum {
     HAL_SPI_SYNCRONUS_MODE_ENBLED,
     HAL_SPI_SYNCRONUS_MODE_DISABLED
 } hal_spi_synchronus_mode_t;
 
 /**
- * SPI peripheral config struct
+ * SPI peripheral configuration struct
  */
 typedef struct {
     hal_api_version_t hal_api_version;
+    hal_spi_channel_t channel;
     hal_spi_port_t port;
-    hal_spi_io_port_t io_port;
     hal_spi_phase_t phase;
     hal_spi_polarity_t polarity;
     hal_spi_bit_order_t bit_order;
@@ -177,60 +166,67 @@ typedef struct {
     hal_spi_clock_source_t clock_source;
     hal_spi_software_slave_management_t software_slave_management;
     uint32_t prescaler;
+
     volatile unsigned int * base_address;
     uint8_t extra_offset;
 } hal_spi_channel_cfg_t;
 
-static hal_spi_channel_cfg_t hal_spi_channel_cfg_B1 = {
-    .hal_api_version = HAL_API_UNKNOWN,
-    .port = HAL_SPI_B1,
-    .io_port = HAL_SPI_B1_P3,
-    .phase = HAL_SPI_PHASE_FIRST_TRANSITION,
-    .polarity = HAL_SPI_POLARITY_IDLE_0,
-    .bit_order = HAL_SPI_MSB_FIRST,
-    .character_length = HAL_SPI_CHARACTER_LENGTH_8_BIT,
-    .master = HAL_SPI_MASTER_CONFIGURATION,
-    .communication_mode = HAL_SPI_MODE_4_WIRE_SLAVE_ACTIVE_0,
-    .synchronus_mode = HAL_SPI_SYNCRONUS_MODE_ENBLED,
-    .clock_source = HAL_SPI_CLOCK_SOURCE_SMCLK,
-    .software_slave_management = HAL_SPI_SOFTWARE_SLAVE_MANAGEMENT_ENABLED,
-    .prescaler = 32
-};
+#ifdef SPI_CHANNEL_B1
+    static hal_spi_channel_cfg_t hal_spi_channel_cfg_B1 = {
+        .hal_api_version = HAL_API_UNKNOWN,
+        .channel = HAL_SPI_B1,
+        .port = HAL_SPI_B1_P3,
+        .phase = HAL_SPI_PHASE_FIRST_TRANSITION,
+        .polarity = HAL_SPI_POLARITY_IDLE_0,
+        .bit_order = HAL_SPI_MSB_FIRST,
+        .character_length = HAL_SPI_CHARACTER_LENGTH_8_BIT,
+        .master = HAL_SPI_MASTER_CONFIGURATION,
+        .communication_mode = HAL_SPI_MODE_4_WIRE_SLAVE_ACTIVE_0,
+        .synchronus_mode = HAL_SPI_SYNCRONUS_MODE_ENBLED,
+        .clock_source = HAL_SPI_CLOCK_SOURCE_SMCLK,
+        .software_slave_management = HAL_SPI_SOFTWARE_SLAVE_MANAGEMENT_DISABLED,
+        .prescaler = 32
+    };
+#endif
 
-static hal_spi_channel_cfg_t hal_spi_channel_cfg_B0 = {
-    .hal_api_version = HAL_API_UNKNOWN,
-    .port = HAL_SPI_B0,
-    .io_port = HAL_SPI_B0_P1,
-    .phase = HAL_SPI_PHASE_SECOND_TRANSITION,
-    .polarity = HAL_SPI_POLARITY_IDLE_0,
-    .bit_order = HAL_SPI_MSB_FIRST,
-    .character_length = HAL_SPI_CHARACTER_LENGTH_8_BIT,
-    .master = HAL_SPI_MASTER_CONFIGURATION,
-    .communication_mode = HAL_SPI_MODE_3_WIRE,
-    .synchronus_mode = HAL_SPI_SYNCRONUS_MODE_ENBLED,
-    .clock_source = HAL_SPI_CLOCK_SOURCE_UCXCLK,
-    .software_slave_management = HAL_SPI_SOFTWARE_SLAVE_MANAGEMENT_DISABLED,
-    .prescaler = 32
-};
+#ifdef SPI_CHANNEL_B0
+    static hal_spi_channel_cfg_t hal_spi_channel_cfg_B0 = {
+        .hal_api_version = HAL_API_UNKNOWN,
+        .channel = HAL_SPI_B0,
+        .port = HAL_SPI_B0_P1,
+        .phase = HAL_SPI_PHASE_FIRST_TRANSITION,
+        .polarity = HAL_SPI_POLARITY_IDLE_1,
+        .bit_order = HAL_SPI_MSB_FIRST,
+        .character_length = HAL_SPI_CHARACTER_LENGTH_8_BIT,
+        .master = HAL_SPI_MASTER_CONFIGURATION,
+        .communication_mode = HAL_SPI_MODE_3_WIRE,
+        .synchronus_mode = HAL_SPI_SYNCRONUS_MODE_ENBLED,
+        .clock_source = HAL_SPI_CLOCK_SOURCE_SMCLK,
+        .software_slave_management = HAL_SPI_SOFTWARE_SLAVE_MANAGEMENT_ENABLED,
+        .prescaler = 32,
+    };
+#endif
 
-static hal_spi_channel_cfg_t hal_spi_channel_cfg_A1 = {
-    .hal_api_version = HAL_API_UNKNOWN,
-    .port = HAL_SPI_A1,
-    .io_port = HAL_SPI_A1_P5,
-    .phase = HAL_SPI_PHASE_FIRST_TRANSITION,
-    .polarity = HAL_SPI_POLARITY_IDLE_0,
-    .bit_order = HAL_SPI_MSB_FIRST,
-    .character_length = HAL_SPI_CHARACTER_LENGTH_8_BIT,
-    .master = HAL_SPI_MASTER_CONFIGURATION,
-    .communication_mode = HAL_SPI_MODE_4_WIRE_SLAVE_ACTIVE_0,
-    .synchronus_mode = HAL_SPI_SYNCRONUS_MODE_ENBLED,
-    .clock_source = HAL_SPI_CLOCK_SOURCE_SMCLK,
-    .software_slave_management = HAL_SPI_SOFTWARE_SLAVE_MANAGEMENT_DISABLED,
-    .prescaler = 32
-};
+#ifdef SPI_CHANNEL_A1
+    static hal_spi_channel_cfg_t hal_spi_channel_cfg_A1 = {
+        .hal_api_version = HAL_API_UNKNOWN,
+        .channel = HAL_SPI_A1,
+        .port = HAL_SPI_A1_P5,
+        .phase = HAL_SPI_PHASE_FIRST_TRANSITION,
+        .polarity = HAL_SPI_POLARITY_IDLE_0,
+        .bit_order = HAL_SPI_MSB_FIRST,
+        .character_length = HAL_SPI_CHARACTER_LENGTH_8_BIT,
+        .master = HAL_SPI_MASTER_CONFIGURATION,
+        .communication_mode = HAL_SPI_MODE_4_WIRE_SLAVE_ACTIVE_0,
+        .synchronus_mode = HAL_SPI_SYNCRONUS_MODE_ENBLED,
+        .clock_source = HAL_SPI_CLOCK_SOURCE_SMCLK,
+        .software_slave_management = HAL_SPI_SOFTWARE_SLAVE_MANAGEMENT_DISABLED,
+        .prescaler = 32
+    };
+#endif
 
-hal_spi_errors_t hal_spi_init(hal_spi_channel_cfg_t *spi_cfg);
-hal_spi_errors_t hal_spi_write(hal_spi_channel_cfg_t *spi_cfg, char c, char *received);
+hal_spi_errors_t hal_spi_init(hal_spi_channel_cfg_t *spi_cfg); /// Initialises SPI with given configuration
+hal_spi_errors_t hal_spi_write(hal_spi_channel_cfg_t *spi_cfg, char c, char *rx);
 hal_spi_errors_t hal_spi_read(hal_spi_channel_cfg_t *table, uint8_t *arr, uint8_t bytes);
 
 #endif
