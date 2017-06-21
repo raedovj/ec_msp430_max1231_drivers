@@ -1,7 +1,7 @@
 #ifndef _EC_MAX1231_H
 #define _EC_MAX1231_H
 
-#include "echal_spi.h"
+#include "SPI_master.h"
 #include <MSP430.h>
 #include <stdint.h>
 
@@ -30,7 +30,7 @@ typedef enum {
 } ADC_data_ready;
 
 typedef struct {
-    hal_spi_channel_cfg_t *spi_conf; ///< SPI conf
+    //hal_spi_channel_cfg_t *spi_conf; ///< SPI conf
 
     // Need GPIO.c first for proper pin configuration
     /*IO_t nCNVST_pin; ///< data is requested if nCNVST is pulled low

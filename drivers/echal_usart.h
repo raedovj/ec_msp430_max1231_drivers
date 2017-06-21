@@ -29,6 +29,7 @@
  * x = base address + offset address
  */
 #define REG_OFFSET(x) (*(uint32_t *)((uint32_t)x))
+//#define REG_OFFSET(x) (*(x))
 
 /**
  * USART modules available on MSP430

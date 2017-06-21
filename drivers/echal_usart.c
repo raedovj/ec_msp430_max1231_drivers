@@ -17,7 +17,7 @@ hal_usart_errors_t hal_usart_init(uint8_t peripheral_index,
         uartA0_cfg = cfg_table;
         base_addr = (uint32_t *) &UCA0CTLW0;
     }
-    else if (peripheral_index == UART_A1)
+    else //UART_A1
     {
         uartA1_cfg = cfg_table;
         base_addr = (uint32_t *) &UCA1CTLW0;
@@ -71,7 +71,7 @@ hal_usart_errors_t hal_usart_init(uint8_t peripheral_index,
     else
         return HAL_USART_GPIO_ERROR;
 
-    REG_OFFSET(base_addr + UCAxCTLW0_offset) = UCSWRST;   // Put eUSCI in reset
+    REG_OFFSET(base_addr + UCAxCTLW0_offset) |= UCSWRST;   // Put eUSCI in reset
 
     // Configure parity
 
@@ -113,7 +113,7 @@ hal_usart_errors_t hal_usart_init(uint8_t peripheral_index,
 
     REG_OFFSET(base_addr + UCAxCTLW0_offset) |= UCSSEL__SMCLK; // Configure USART input clock to be SMCLK
 
-    REG_OFFSET(base_addr + UCAxCTLW1_offset ) = UCGLIT_3; // Deglitch time 10b = Approximately 100 ns
+    //REG_OFFSET(base_addr + UCAxCTLW1_offset ) = UCGLIT_3; // Deglitch time 10b = Approximately 100 ns
 
     // Bits that determine baud rate and modulations
 
@@ -172,8 +172,8 @@ hal_usart_errors_t hal_usart_init(uint8_t peripheral_index,
     REG_OFFSET(base_addr + UCAxMCTLW_offset) = UCBRSx_bits << 8
             | UCBRFx_bits << 4 | UCOS16_bits;
     REG_OFFSET(base_addr + UCAxCTLW0_offset) &= ~UCSWRST;   // Initialize eUSCI
-    REG_OFFSET(base_addr + UCAxIE_offset) = UCRXIE; // Enable USCI_Ax RX interrupt
-    REG_OFFSET(base_addr + UCAxIFG_offset) |= UCTXIFG; // Indicate TX buffer to be empty so interrupts can happen
+    REG_OFFSET(base_addr + UCAxIE_offset) |= UCRXIE; // Enable USCI_Ax RX interrupt
+    //REG_OFFSET(base_addr + UCAxIFG_offset) |= UCTXIFG; // Indicate TX buffer to be empty so interrupts can happen
     return HAL_USART_OK;
 }
 
@@ -298,8 +298,7 @@ hal_usart_errors_t hal_usart_read(uint8_t peripheral_index, uint16_t word_count,
         return HAL_USART_BUFFER_DEPLETED;
 }
 
-#pragma vector=USCI_A0_VECTOR
-__interrupt void USCI_A0_ISR(void)
+void __attribute__ ((interrupt (USCI_A0_VECTOR))) USCI_A0_ISR(void)
 {
     circFIFO64k_t *RX_FIFO = uartA0_cfg->RX_FIFO;
     circFIFO64k_t *TX_FIFO = uartA0_cfg->TX_FIFO;
@@ -338,8 +337,8 @@ __interrupt void USCI_A0_ISR(void)
     }
 }
 
-#pragma vector=USCI_A1_VECTOR
-__interrupt void USCI_A1_ISR(void)
+void __attribute__ ((interrupt (USCI_A1_VECTOR))) USCI_A1_ISR(void)
+//__interrupt void USCI_A1_ISR(void)
 {
     circFIFO64k_t *RX_FIFO = uartA1_cfg->RX_FIFO;
     circFIFO64k_t *TX_FIFO = uartA1_cfg->TX_FIFO;

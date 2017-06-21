@@ -193,7 +193,7 @@ static hal_spi_channel_cfg_t hal_spi_channel_cfg_B1 = {
     .communication_mode = HAL_SPI_MODE_4_WIRE_SLAVE_ACTIVE_0,
     .synchronus_mode = HAL_SPI_SYNCRONUS_MODE_ENBLED,
     .clock_source = HAL_SPI_CLOCK_SOURCE_SMCLK,
-    .software_slave_management = HAL_SPI_SOFTWARE_SLAVE_MANAGEMENT_DISABLED,
+    .software_slave_management = HAL_SPI_SOFTWARE_SLAVE_MANAGEMENT_ENABLED,
     .prescaler = 32
 };
 
@@ -201,14 +201,14 @@ static hal_spi_channel_cfg_t hal_spi_channel_cfg_B0 = {
     .hal_api_version = HAL_API_UNKNOWN,
     .port = HAL_SPI_B0,
     .io_port = HAL_SPI_B0_P1,
-    .phase = HAL_SPI_PHASE_FIRST_TRANSITION,
+    .phase = HAL_SPI_PHASE_SECOND_TRANSITION,
     .polarity = HAL_SPI_POLARITY_IDLE_0,
     .bit_order = HAL_SPI_MSB_FIRST,
     .character_length = HAL_SPI_CHARACTER_LENGTH_8_BIT,
     .master = HAL_SPI_MASTER_CONFIGURATION,
     .communication_mode = HAL_SPI_MODE_3_WIRE,
     .synchronus_mode = HAL_SPI_SYNCRONUS_MODE_ENBLED,
-    .clock_source = HAL_SPI_CLOCK_SOURCE_SMCLK,
+    .clock_source = HAL_SPI_CLOCK_SOURCE_UCXCLK,
     .software_slave_management = HAL_SPI_SOFTWARE_SLAVE_MANAGEMENT_DISABLED,
     .prescaler = 32
 };

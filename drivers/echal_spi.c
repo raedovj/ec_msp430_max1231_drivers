@@ -56,8 +56,8 @@ hal_spi_errors_t hal_spi_init(hal_spi_channel_cfg_t *table)
 
         if(table->io_port == HAL_SPI_B0_P1)
         {
-            P1SEL1 &= ~(BIT4 | BIT5 | BIT6 | BIT7);
-            P1SEL0 |= (BIT4 | BIT5 | BIT6 | BIT7);
+            P1SEL1 &= ~(BIT4/* | BIT5 */| BIT6 | BIT7);
+            P1SEL0 |= (BIT4/* | BIT5 */| BIT6 | BIT7);
         }
         else
         {
@@ -90,7 +90,7 @@ hal_spi_errors_t hal_spi_init(hal_spi_channel_cfg_t *table)
 
     volatile unsigned int * current_address = table->base_address;
 
-    *(table->base_address) = UCSWRST;
+    *(table->base_address) |= UCSWRST;
 
 
     if(table->phase == HAL_SPI_PHASE_SECOND_TRANSITION)
@@ -205,9 +205,14 @@ hal_spi_errors_t hal_spi_write(hal_spi_channel_cfg_t *table, char c)
     else
         return HAL_SPI_PORT_INVALID;
 
-    while(!(*(table->base_address + IFG_offset) & UCTXIFG));
+    /*while(!(*(table->base_address + IFG_offset) & UCTXIFG));
     *(table->base_address + 0x7) = c;
-
+    while(!(UCB0IFG & UCRXIFG));
+    __delay_cycles(300);*/
+    while(!(UCB0IFG & UCTXIFG));
+    UCB0TXBUF = c;
+    while(!(UCB0IFG & UCRXIFG)); //while(!(UCB0IFG & UCTXIFG));
+    UCB0IFG &= ~UCRXIFG;
     return HAL_SPI_OK;
 }
 
