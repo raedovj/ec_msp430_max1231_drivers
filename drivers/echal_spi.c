@@ -189,7 +189,7 @@ hal_spi_errors_t hal_spi_init(hal_spi_channel_cfg_t *table)
     return HAL_SPI_OK;
 }
 
-hal_spi_errors_t hal_spi_write(hal_spi_channel_cfg_t *table, char c)
+hal_spi_errors_t hal_spi_write(hal_spi_channel_cfg_t *table, char c, char *received)
 {
     //volatile unsigned int * base_address = table->base_address;
     uint16_t IFG_offset;
@@ -210,9 +210,11 @@ hal_spi_errors_t hal_spi_write(hal_spi_channel_cfg_t *table, char c)
     while(!(UCB0IFG & UCRXIFG));
     __delay_cycles(300);*/
     while(!(UCB0IFG & UCTXIFG));
+    UCB0IFG &= ~UCTXIFG;
     UCB0TXBUF = c;
     while(!(UCB0IFG & UCRXIFG)); //while(!(UCB0IFG & UCTXIFG));
-    UCB0IFG &= ~UCRXIFG;
+    //UCB0IFG &= ~UCRXIFG;
+    *received = UCB0RXBUF;
     return HAL_SPI_OK;
 }
 

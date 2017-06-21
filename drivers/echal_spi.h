@@ -230,7 +230,7 @@ static hal_spi_channel_cfg_t hal_spi_channel_cfg_A1 = {
 };
 
 hal_spi_errors_t hal_spi_init(hal_spi_channel_cfg_t *spi_cfg);
-hal_spi_errors_t hal_spi_write(hal_spi_channel_cfg_t *spi_cfg, char c);
+hal_spi_errors_t hal_spi_write(hal_spi_channel_cfg_t *spi_cfg, char c, char *received);
 hal_spi_errors_t hal_spi_read(hal_spi_channel_cfg_t *table, uint8_t *arr, uint8_t bytes);
 
 #endif
